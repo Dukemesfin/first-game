@@ -1,6 +1,8 @@
 import pygame
 import time
 import random
+from powerups import PowerUp
+
 
 pygame.font.init()
 pygame.init()
@@ -28,8 +30,8 @@ background = pygame.transform.scale(pygame.image.load("background.jpg"), (WIDTH,
 player_image = pygame.transform.scale(pygame.image.load("spaceship.png"), (PLAYER_WIDTH, PLAYER_HEIGHT))
 star_image = pygame.transform.scale(pygame.image.load("asteroid.png"), (STAR_WIDTH, STAR_HEIGHT))
 enemy_image = pygame.transform.scale(pygame.image.load("ufo.png"), (ENEMY_WIDTH, ENEMY_HEIGHT))
-boss_img = pygame.transform.scale(pygame.image.load("ufo.png"), (150, 100))  # separate variable
-
+boss_img = pygame.transform.scale(pygame.image.load("boss.png"), (200, 300))  # separate variable
+Bullet_img = pygame.transform.scale(pygame.image.load("bullet.png"), (30, 30))
 # Player setup
 player = pygame.Rect(200, HEIGHT - PLAYER_HEIGHT, PLAYER_WIDTH, PLAYER_HEIGHT)
 screen_shake = 0
@@ -52,7 +54,7 @@ class Boss:
     def __init__(self):
         self.image = boss_img
         self.rect = self.image.get_rect(midtop=(WIDTH // 2, -100))
-        self.health = 5
+        self.health = 10
         self.speed = 1
         self.direction = 1
 
@@ -65,7 +67,7 @@ class Boss:
     def draw(self, surface, offset):
         surface.blit(self.image, (self.rect.x + offset[0], self.rect.y + offset[1]))
 
-def draw(player, elapsed_time, stars, bullets, score, enemies, render_offset, boss):
+def draw(player, elapsed_time, stars, bullets, score, enemies, render_offset, boss, powerups):
     WIN.fill((0, 0, 0))
     WIN.blit(background, (0, 0))
 
@@ -84,7 +86,8 @@ def draw(player, elapsed_time, stars, bullets, score, enemies, render_offset, bo
         WIN.blit(enemy_image, (enemy["rect"].x + render_offset[0], enemy["rect"].y + render_offset[1]))
 
     for bullet in bullets:
-        bullet.draw(WIN)
+         WIN.blit(Bullet_img, (bullet.rect.x + render_offset[0], bullet.rect.y + render_offset[1]))
+
 
     if boss:
         boss.draw(WIN, render_offset)
@@ -114,6 +117,10 @@ def dduke():
     stars = []
     enemies = []
     bullets = []
+    powerups = []
+    active_powerup = None
+    powerup_timer = 0
+
     game_over = False
 
     while run:
@@ -153,11 +160,21 @@ def dduke():
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                run = False
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                bullet = Bullet(player.x + PLAYER_WIDTH // 2 - 2, player.y)
-                bullets.append(bullet)
-                screen_shake = 10
+               run = False
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                 if active_powerup == "double_bullet" and time.time() - powerup_timer < 20:
+                    bullets.append(Bullet(player.x + 5, player.y))
+                    bullets.append(Bullet(player.x + PLAYER_WIDTH - 10, player.y))
+                 else:
+                  bullets.append(Bullet(player.x + PLAYER_WIDTH // 2 - 2, player.y))
+                  screen_shake = 10
+
+        # Turn off powerup if it expired
+        if active_powerup and time.time() - powerup_timer >= 10:
+            active_powerup = None
+
+
+
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a]:
@@ -193,27 +210,40 @@ def dduke():
             if bullet.rect.y < 0:
                 bullets.remove(bullet)
                 continue
+            removed = False
 
             for star in stars[:]:
                 if bullet.rect.colliderect(star["rect"]):
                     bullets.remove(bullet)
                     stars.remove(star)
                     score += 1
+                    removed = True
                     break
+
+            if removed:
+               continue
+
 
             for enemy in enemies[:]:
                 if bullet.rect.colliderect(enemy["rect"]):
                     bullets.remove(bullet)
                     enemies.remove(enemy)
                     score += 2
+                    removed = True
                     break
+                
+                if removed:
+                    continue
 
             if boss and bullet.rect.colliderect(boss.rect):
                 bullets.remove(bullet)
                 boss.health -= 1
                 if boss.health <= 0:
-                    boss = None
-                    score += 10
+            # Spawn power-up at boss position
+                 powerups.append(PowerUp(boss.rect.centerx, boss.rect.bottom))
+                 boss = None
+                score += 10
+                break
 
         if boss:
             boss.move()
@@ -224,7 +254,20 @@ def dduke():
             game_over_screen(score)
             break
 
-        draw(player, elapsed_time, stars, bullets, score, enemies, render_offset, boss)
+        for powerup in powerups[:]:
+                   powerup.move()
+                   if powerup.rect.colliderect(player):
+                    active_powerup = powerup.type
+                    powerup_timer = time.time()
+                    powerups.remove(powerup)
+                   elif powerup.rect.y > HEIGHT:
+                    powerups.remove(powerup)
+                    
+
+        draw(player, elapsed_time, stars, bullets, score, enemies, render_offset, boss, powerups)
+        for powerup in powerups:
+            powerup.draw(WIN)
+
         pygame.display.update()
 
     pygame.quit()
