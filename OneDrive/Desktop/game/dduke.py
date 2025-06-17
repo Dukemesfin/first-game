@@ -31,7 +31,7 @@ player_image = pygame.transform.scale(pygame.image.load("spaceship.png"), (PLAYE
 star_image = pygame.transform.scale(pygame.image.load("asteroid.png"), (STAR_WIDTH, STAR_HEIGHT))
 enemy_image = pygame.transform.scale(pygame.image.load("ufo.png"), (ENEMY_WIDTH, ENEMY_HEIGHT))
 boss_img = pygame.transform.scale(pygame.image.load("boss.png"), (200, 300))  # separate variable
-Bullet_img = pygame.transform.scale(pygame.image.load("bullet.png"), (30, 30))
+Bullet_img = pygame.transform.scale(pygame.image.load("bullet.png"), (20, 20))
 # Player setup
 player = pygame.Rect(200, HEIGHT - PLAYER_HEIGHT, PLAYER_WIDTH, PLAYER_HEIGHT)
 screen_shake = 0
@@ -39,9 +39,9 @@ screen_shake = 0
 # Bullet class
 class Bullet:
     def __init__(self, x, y):
-        self.rect = pygame.Rect(x, y, 5, 10)
+        self.rect = pygame.Rect(x, y, 6, 10)
         self.color = (255, 0, 0)
-        self.speed = 30
+        self.speed = 40
 
     def move(self):
         self.rect.y -= self.speed
