@@ -6,14 +6,14 @@ class PowerUp:
         self.width = 40
         self.height = 40
         self.rect = pygame.Rect(x, y, self.width, self.height)
-        self.type = random.choice(["double_bullet"])
+        self.type = random.choice(["double_bullet", "shild"])
         self.speed = 2
         if self.type == "double_bullet":
             self.image = pygame.transform.scale(pygame.image.load("powerup1.png"), (self.width, self.height))
+        elif self.type == "shild":
+            self.image = pygame.transform.scale(pygame.image.load("powerup2.png"), (self.width, self.height))
         else:
-            self.image = pygame.transform.scale(pygame.image.load("powerup3.png"), (self.width, self.height))
-
-        
+            self.image = pygame.transform.scale(pygame.image.lode("powerup3.png"), (self.width, self.height))
 
     def move(self):
         self.rect.y += self.speed

@@ -9,8 +9,8 @@ pygame.init()
 
 # Constants
 WIDTH, HEIGHT = 400, 700
-PLAYER_WIDTH = 40
-PLAYER_HEIGHT = 60
+PLAYER_WIDTH = 80
+PLAYER_HEIGHT = 100
 STAR_WIDTH = 50
 STAR_HEIGHT = 50
 STAR_VAL = 6
@@ -27,27 +27,29 @@ pygame.display.set_caption("Space KILL")
 background = pygame.transform.scale(pygame.image.load("background.jpg"), (WIDTH, HEIGHT))
 
 # Load images
-player_image = pygame.transform.scale(pygame.image.load("spaceship.png"), (PLAYER_WIDTH, PLAYER_HEIGHT))
+player_image = pygame.transform.scale(pygame.image.load("player.png"), (PLAYER_WIDTH, PLAYER_HEIGHT))
 star_image = pygame.transform.scale(pygame.image.load("asteroid.png"), (STAR_WIDTH, STAR_HEIGHT))
 enemy_image = pygame.transform.scale(pygame.image.load("ufo.png"), (ENEMY_WIDTH, ENEMY_HEIGHT))
 boss_img = pygame.transform.scale(pygame.image.load("boss.png"), (200, 300))  # separate variable
-Bullet_img = pygame.transform.scale(pygame.image.load("bullet.png"), (20, 20))
+Bullet_img = pygame.transform.scale(pygame.image.load("bullet.png"), (30, 30))
 # Player setup
 player = pygame.Rect(200, HEIGHT - PLAYER_HEIGHT, PLAYER_WIDTH, PLAYER_HEIGHT)
 screen_shake = 0
 
 # Bullet class
 class Bullet:
-    def __init__(self, x, y):
-        self.rect = pygame.Rect(x, y, 6, 10)
+    def __init__(self, x, y, width = 6, height = 10):
+        self.rect = pygame.Rect(x, y, width, height)
         self.color = (255, 0, 0)
+        self.image = pygame.transform.scale(Bullet_img, (width, height))
         self.speed = 40
+        
 
     def move(self):
         self.rect.y -= self.speed
 
     def draw(self, surface):
-        pygame.draw.rect(surface, self.color, self.rect)
+        surface.blit(self.image, (self.rect.x, self.rect.y))
 
 # Boss class
 class Boss:
@@ -162,12 +164,15 @@ def dduke():
             if event.type == pygame.QUIT:
                run = False
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                 if active_powerup == "double_bullet" and time.time() - powerup_timer < 20:
-                    bullets.append(Bullet(player.x + 5, player.y))
-                    bullets.append(Bullet(player.x + PLAYER_WIDTH - 10, player.y))
-                 else:
-                  bullets.append(Bullet(player.x + PLAYER_WIDTH // 2 - 2, player.y))
-                  screen_shake = 10
+                if active_powerup == "double_bullet" and time.time() - powerup_timer < 20:
+                     bullets.append(Bullet(player.x + 5, player.y))
+                     bullets.append(Bullet(player.x + PLAYER_WIDTH - 10, player.y))
+                elif active_powerup == "shild" and time.time() - powerup_timer < 10:
+                    bullets.append(Bullet(player.x + PLAYER_WIDTH // 2 - 6, player.y, 90, 100))
+                        
+                else:
+                 bullets.append(Bullet(player.x + PLAYER_WIDTH // 2 - 2, player.y))
+                screen_shake = 10
 
         # Turn off powerup if it expired
         if active_powerup and time.time() - powerup_timer >= 10:
@@ -267,6 +272,9 @@ def dduke():
         draw(player, elapsed_time, stars, bullets, score, enemies, render_offset, boss, powerups)
         for powerup in powerups:
             powerup.draw(WIN)
+
+        for bullet in bullets:
+            bullet.draw(WIN)    
 
         pygame.display.update()
 
