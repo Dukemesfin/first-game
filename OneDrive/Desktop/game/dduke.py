@@ -17,6 +17,7 @@ STAR_VAL = 6
 ENEMY_WIDTH = 50
 ENEMY_HEIGHT = 50
 ENEMY_VAL = 4
+BACKGROUND_SPEED = 8
 FONT = pygame.font.SysFont("pixle", 30)
 
 # Game Setup
@@ -24,7 +25,28 @@ WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Space KILL")
 
 # Background
-background = pygame.transform.scale(pygame.image.load("background.jpg"), (WIDTH, HEIGHT))
+class Background:
+    def __init__(self, image_path):
+        self.image = pygame.transform.scale(pygame.image.load("Nebula Aqua-Pink.png"), (WIDTH, HEIGHT))
+
+  
+        self.y1 = 0
+        self.y2 = -HEIGHT
+        self.speed = BACKGROUND_SPEED
+
+    def update(self):
+        self.y1 += self.speed
+        self.y2 += self.speed
+
+        if self.y1 >= HEIGHT:
+            self.y1 = self.y2 - HEIGHT
+        if self.y2 >= HEIGHT:
+            self.y2 = self.y1 - HEIGHT
+
+    def draw(self, screen):
+        screen.blit(self.image, (0, self.y1,))
+        screen.blit(self.image, (0, self.y2,))
+
 
 # Load images
 player_image = pygame.transform.scale(pygame.image.load("player.png"), (PLAYER_WIDTH, PLAYER_HEIGHT))
@@ -69,9 +91,10 @@ class Boss:
     def draw(self, surface, offset):
         surface.blit(self.image, (self.rect.x + offset[0], self.rect.y + offset[1]))
 
-def draw(player, elapsed_time, stars, bullets, score, enemies, render_offset, boss, powerups):
-    WIN.fill((0, 0, 0))
-    WIN.blit(background, (0, 0))
+def draw(player, elapsed_time, stars, bullets, score, enemies, render_offset, boss, powerups, bg):
+    
+    
+    bg.draw(WIN)
 
     time_text = FONT.render(f"Time: {round(elapsed_time)}s", 1, "white")
     WIN.blit(time_text, (10, 10))
@@ -105,6 +128,9 @@ def dduke():
     run = True
     clock = pygame.time.Clock()
     start_time = time.time()
+
+    bg = Background("jummper_game/assets/ice.jpg")
+
 
     score = 0
     star_add_increment = 2000
@@ -267,9 +293,13 @@ def dduke():
                     powerups.remove(powerup)
                    elif powerup.rect.y > HEIGHT:
                     powerups.remove(powerup)
+
+
+        bg.update()
+
                     
 
-        draw(player, elapsed_time, stars, bullets, score, enemies, render_offset, boss, powerups)
+        draw(player, elapsed_time, stars, bullets, score, enemies, render_offset, boss, powerups, bg)
         for powerup in powerups:
             powerup.draw(WIN)
 
